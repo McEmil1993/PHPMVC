@@ -10,7 +10,8 @@ class HomeController extends Controller  {
         Session::start();
         $user_role = Session::getUserRole();
         $data = [
-            'title' => 'Home Page',
+            'title' => 'Dashboard',
+            'status' => 'active',
             'content' => 'Welcome to the home page!',
             'user_role' => $user_role
         ];
@@ -35,7 +36,7 @@ class HomeController extends Controller  {
                     break;
                 default:
                     // Code para sa default home page
-                    $this->renderView('home', $data);
+                    $this->renderView('pages/dashboard/index', $data);
             }
         } else {
             // Redirect to login page if user is not logged in

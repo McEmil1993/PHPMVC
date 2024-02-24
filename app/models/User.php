@@ -10,9 +10,21 @@ class User {
         $this->db = new Database();
     }
 
-    public function getUserById($id) {
-        $this->db->query("SELECT * FROM tb_accounts WHERE id = :id");
-        $this->db->bind(':id', $id);
+    public function getAllUsers() {
+        $sql = "SELECT * ,adm.id as admin_id
+                FROM tb_accounts AS acc
+                JOIN tb_admins AS adm ON acc.id = adm.account_id";
+    
+        $this->db->query($sql);
+        return $this->db->resultSet();
+    }
+
+    public function getUserById($data) {
+        $this->db->query("SELECT * ,adm.id as admin_id
+        FROM tb_accounts AS acc
+        JOIN tb_admins AS adm ON acc.id = adm.account_id WHERE admin_id = :admin_id and account_id = :account_id");
+        $this->db->bind(':admin_id', $data['admin_id']);
+        $this->db->bind(':account_id', $data['account_id']);
         return $this->db->single();
     }
 
@@ -72,8 +84,8 @@ class User {
         $this->db->bind(':lastname', $lastname);
         $this->db->bind(':contact', $contact);
         $this->db->bind(':created_at', $createdAt);
-        
         // Execute
+        
         return $this->db->execute();
     }
 
@@ -82,8 +94,7 @@ class User {
         $this->db->query("SELECT * FROM tb_accounts WHERE username = :username");
         $this->db->bind(':username', $username);
         $user = $this->db->single();
-        // Session::start();
-        // Session::setUser($existingUser);
+
         if ($user) {
             // Verify password
             $hashedPassword = $user['password'];

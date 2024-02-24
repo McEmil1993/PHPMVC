@@ -39,37 +39,7 @@ class AuthController extends Controller {
                 'status' => $loginUSer,
                 'message' => $message
             ]);
-            // if ($existingUser) {
-            //     // Verify password
-            //     if (password_verify($password, $existingUser['password'])) {
-            //         // Start session
-            //         Session::start();
-
-            //         // Set user session
-            //         Session::setUser($existingUser);
-
-            //         // Redirect to dashboard based on user role
-            //         $role = $existingUser['role'];
-            //         switch ($role) {
-            //             case 'admin':
-            //                 header("Location: /admin/dashboard");
-            //                 break;
-            //             case 'cashier':
-            //                 header("Location: /cashier/dashboard");
-            //                 break;
-            //             case 'customer':
-            //                 header("Location: /customer/dashboard");
-            //                 break;
-            //             default:
-            //                 header("Location: /dashboard");
-            //         }
-            //         exit();
-            //     } else {
-            //         echo "Invalid username or password";
-            //     }
-            // } else {
-            //     echo "User does not exist";
-            // }
+            
         } else {
             // Display login form
             $this->renderView('auth/login', $data);
