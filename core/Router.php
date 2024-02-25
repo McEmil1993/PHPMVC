@@ -20,6 +20,7 @@ class Router {
             '/users' => 'UserController@index',
             '/add-user' => 'UserController@addUser',
             '/edit-user' => 'UserController@getUserId',
+            '/update-user' => 'UserController@updateUser',
             '/shops' => 'ShopOwnerController@index',
             '/template' => 'TemplateController@index',
         ];

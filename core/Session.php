@@ -31,6 +31,10 @@ class Session {
         setcookie(session_name(), '', time() - 3600, '/');
     }
 
+    public static function getUserID() {
+        return isset($_SESSION['account_id']) ? $_SESSION['account_id']: '1';
+    }
+
     public static function isLoggedIn() {
         return isset($_SESSION['account_id']);
     }

@@ -70,6 +70,43 @@ class UserController extends Controller  {
             $this->renderView('auth/register', []); // Adjust the path and data as needed
         }
     }
+
+    public function updateUser() {
+            $data = [
+                'admin_id' => $_POST['admin_id'],
+                'account_id' => $_POST['account_id'],
+                'firstname' => $_POST['firstname'],
+                'middlename' => $_POST['middlename'],
+                'lastname' => $_POST['lastname'],
+                'contact' => $_POST['contact'],
+                'username' => $_POST['username'],
+                'password' => $_POST['password'],
+                'role' => $_POST['role'], // Default role for registered users is_deleted
+                'is_deleted' => $_POST['is_deleted']
+            ];
+    
+            // Create a new instance of User model
+            $user = new User();
+    
+            // Call the registerUser method of the User model
+            $result = $user->updateUser($data);
+    
+            // Check the result of registration
+            if ($result) {
+                // $this->renderView('auth/register', []);
+                echo json_encode([
+                    'status' => 1,
+                    'message' => 'Success!'
+                ]);
+                // You may want to redirect the user to the login page or some other page after successful registration
+            } else {
+                echo json_encode([
+                    'status' => 0,
+                    'message' => 'Error!'
+                ]);
+            }
+       
+    }
     public function getUserId() {
         $get = [
             'admin_id' =>  $_POST['admin_id'],

@@ -155,6 +155,7 @@
             toast.removeClass('fade-in').addClass('fade-out');
             setTimeout(function() {
                 toast.remove();
+                
             }, 500);
         }, 2000);
     }
