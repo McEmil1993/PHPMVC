@@ -2,12 +2,16 @@
 
 require_once '../core/Database.php';
 require_once '../core/Session.php';
-
+require_once '../db/QueryBuilder.php';
 class User {
+
+    protected $fillable = [''];
+    private $queryBuilder;
     private $db;
 
     public function __construct() {
         $this->db = new Database();
+        $this->queryBuilder = QueryBuilder('users');
     }
 
     public function getAllUsers() {
