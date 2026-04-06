@@ -1,122 +1,98 @@
 <?php
+declare(strict_types=1);
 
-require_once '../core/Session.php';
-require_once '../core/Controller.php';
-require_once '../app/models/User.php';
+namespace App\Controllers;
 
-class UserController extends Controller  {
-    private $user_role;
-    public function __construct() {
-        // Start session
-        Session::start();
-        if (!Session::isLoggedIn()) {
-            $this->renderView('auth/login',[]);
-            exit();
-        }
-        $this->user_role = Session::getUserRole();
+use App\Requests\CreateUserRequest;
+use App\Requests\UpdateUserRequest;
+use App\Requests\ValidationException;
+use App\Resources\ApiResponse;
+use App\Resources\UserResource;
+use App\Services\UserService;
+use Bootstrap\Response;
+use InvalidArgumentException;
+use Throwable;
+
+final class UserController
+{
+    public function __construct(private UserService $userService)
+    {
     }
 
-    public function index() {
-        $user = new User();
-        $users = $user->getAllUsers();
-        $data = [
-            'title' => 'User Management',
-            'status' => 'active',
-            'content' => 'Welcome to the Template!',
-            'user_role' => $this->user_role,
-            'datas' => $users
-        ];
-        // echo json_encode($data);
-
-        $this->renderView('pages/user_management/index', $data);
-
-    }
-
-    public function addUser() {
-
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Get form data
-            $data = [
-                'firstname' => $_POST['firstname'],
-                'middlename' => $_POST['middlename'],
-                'lastname' => $_POST['lastname'],
-                'contact' => $_POST['contact'],
-                'username' => $_POST['username'],
-                'password' => $_POST['password'],
-                'role' =>  $_POST['role'], // Default role for registered users
-            ];
-    
-            // Create a new instance of User model
-            $user = new User();
-    
-            // Call the registerUser method of the User model
-            $result = $user->registerUser($data);
-
-            if ($result) {
-                // $this->renderView('auth/register', []);
-                echo json_encode([
-                    'status' => 1,
-                    'message' => 'Success!'
-                ]);
-
-            } else {
-                echo json_encode([
-                    'status' => 0,
-                    'message' => 'Username already exist!'
-                ]);
-            }
-        } else {
-            // Display registration form
-            $this->renderView('auth/register', []); // Adjust the path and data as needed
+    public function index(): void
+    {
+        try {
+            $users = $this->userService->list();
+            Response::json(ApiResponse::success('Users fetched', UserResource::collection($users)));
+        } catch (Throwable $e) {
+            Response::json(ApiResponse::error('Failed to fetch users'), 500);
         }
     }
 
-    public function updateUser() {
-            $data = [
-                'admin_id' => $_POST['admin_id'],
-                'account_id' => $_POST['account_id'],
-                'firstname' => $_POST['firstname'],
-                'middlename' => $_POST['middlename'],
-                'lastname' => $_POST['lastname'],
-                'contact' => $_POST['contact'],
-                'username' => $_POST['username'],
-                'password' => $_POST['password'],
-                'role' => $_POST['role'], // Default role for registered users is_deleted
-                'is_deleted' => $_POST['is_deleted']
-            ];
-    
-            // Create a new instance of User model
-            $user = new User();
-    
-            // Call the registerUser method of the User model
-            $result = $user->updateUser($data);
-    
-            // Check the result of registration
-            if ($result) {
-                // $this->renderView('auth/register', []);
-                echo json_encode([
-                    'status' => 1,
-                    'message' => 'Success!'
-                ]);
-                // You may want to redirect the user to the login page or some other page after successful registration
-            } else {
-                echo json_encode([
-                    'status' => 0,
-                    'message' => 'Error!'
-                ]);
-            }
-       
+    public function store(): void
+    {
+        try {
+            $payload = (new CreateUserRequest())->validate();
+            $user = $this->userService->create($payload);
+            Response::json(ApiResponse::success('User created', UserResource::make($user)), 201);
+        } catch (ValidationException $e) {
+            Response::json(ApiResponse::error('Validation failed', [
+                'errors' => $e->errors(),
+            ]), 422);
+        } catch (InvalidArgumentException $e) {
+            Response::json(ApiResponse::error($e->getMessage()), 422);
+        } catch (Throwable $e) {
+            Response::json(ApiResponse::error('Failed to create user'), 500);
+        }
     }
-    public function getUserId() {
-        $get = [
-            'admin_id' =>  $_POST['admin_id'],
-            'account_id' =>  $_POST['account_id'],
-        ];
-        $user = new User();
-        $data = $user->getUserById($get);
-        
-        echo json_encode($data);
 
+    public function update(string $id): void
+    {
+        try {
+            $userId = (int)$id;
+            if ($userId <= 0) {
+                throw new InvalidArgumentException('Invalid user id');
+            }
+
+            $payload = (new UpdateUserRequest())->validate();
+            $user = $this->userService->update($userId, $payload);
+
+            if ($user === null) {
+                Response::json(ApiResponse::error('User not found'), 404);
+                return;
+            }
+
+            Response::json(ApiResponse::success('User updated', UserResource::make($user)));
+        } catch (ValidationException $e) {
+            Response::json(ApiResponse::error('Validation failed', [
+                'errors' => $e->errors(),
+            ]), 422);
+        } catch (InvalidArgumentException $e) {
+            Response::json(ApiResponse::error($e->getMessage()), 422);
+        } catch (Throwable $e) {
+            Response::json(ApiResponse::error('Failed to update user'), 500);
+        }
+    }
+
+    public function destroy(string $id): void
+    {
+        try {
+            $userId = (int)$id;
+            if ($userId <= 0) {
+                throw new InvalidArgumentException('Invalid user id');
+            }
+
+            $deleted = $this->userService->delete($userId);
+            if (!$deleted) {
+                Response::json(ApiResponse::error('User not found'), 404);
+                return;
+            }
+
+            Response::json(ApiResponse::success('User deleted', (object)[]));
+        } catch (InvalidArgumentException $e) {
+            Response::json(ApiResponse::error($e->getMessage()), 422);
+        } catch (Throwable $e) {
+            Response::json(ApiResponse::error('Failed to delete user'), 500);
+        }
     }
 }
-?>
